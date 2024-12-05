@@ -22,6 +22,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -34,6 +37,19 @@ import java.util.stream.Collectors;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(){
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("http://localhost:3000"); // Origen del frontend
+        configuration.addAllowedMethod("*"); // Permitir todos los métodos HTTP
+        configuration.addAllowedHeader("*"); // Permitir todos los encabezados
+        configuration.setAllowCredentials(true); // Permitir credenciales (como cookies o tokens)
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/", configuration); // Aplica CORS a todas las rutas
+        return source;
+    }
 
     /**
      * Filtro de autenticación JWT.
@@ -51,19 +67,19 @@ public class SecurityConfig {
      * Ruta de autenticación.
      * Esta constante define la ruta de autenticación.
      */
-    private static final String AUTH_PATH = "/auth/**";
+    private static final String AUTH_PATH = "/auth/";
 
     /**
      * Rutas de empleado.
      * Esta constante define las rutas accesibles para los empleados.
      */
-    private static final String[] EMPLOYEE_PATHS = {"/api/huespedes/**", "/api/reservas/**", "/api/habitaciones/**"};
+    private static final String[] EMPLOYEE_PATHS = {"/api/huespedes/", "/api/reservas/", "/api/habitaciones/"};
 
     /**
      * Ruta de administrador.
      * Esta constante define la ruta accesible para los administradores.
      */
-    private static final String ADMIN_PATH = "/api/**";
+    private static final String ADMIN_PATH = "/api/";
 
     /**
      * Método para configurar la cadena de filtros de seguridad.
@@ -82,6 +98,7 @@ public class SecurityConfig {
 
         try {
             return http
+                    .cors(cors -> cors.configurationSource(corsConfigurationSource())) //CORS: permitir conexcion con front, con dominio diferente (buscar más xd)
                     .exceptionHandling(exceptionHandling -> exceptionHandling
                             .accessDeniedHandler((request, response, ex) -> {
                                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
